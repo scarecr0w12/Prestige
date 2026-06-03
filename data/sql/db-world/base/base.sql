@@ -1,4 +1,5 @@
 DELETE FROM `creature_template` WHERE `entry`=441153;
+-- Partial row: scale lives on creature_template_model.DisplayScale; VerifiedBuild optional on creature_template.
 INSERT INTO `creature_template` (
     `entry`,
     `name`,
@@ -8,10 +9,8 @@ INSERT INTO `creature_template` (
     `maxlevel`,
     `faction`,
     `npcflag`,
-    `scale`,
     `AIName`,
-    `ScriptName`,
-    `VerifiedBuild`
+    `ScriptName`
 ) VALUES (
     441153,
     'Chad ThunderCog',
@@ -21,10 +20,8 @@ INSERT INTO `creature_template` (
     15,
     35,
     1,
-    1,
     '',
-    'PrestigeCreatureScript',
-    1
+    'PrestigeCreatureScript'
 );
 
 DELETE FROM `creature_template_model` WHERE `CreatureID`=441153 AND `Idx`=0;

@@ -152,6 +152,7 @@ struct PrestigeConfigSettings
         uint32 _levelUpFormulaBase;
         uint16 _levelUpFormulaR;
         uint16 _levelUpFormulaK;
+        bool _addonXpIndicator;
 
         PrestigeConfigSettings() = default;
         PrestigeConfigSettings(const PrestigeConfigSettings&) = delete;
@@ -202,6 +203,9 @@ struct PrestigeConfigSettings
         
         uint16 GetLevelUpFormulaK() const { return _levelUpFormulaK; }
         void SetLevelUpFormulaK(uint16 value) { _levelUpFormulaK = value; }
+
+        bool IsAddonXpIndicatorEnabled() const { return _addonXpIndicator; }
+        void SetAddonXpIndicator(bool value) { _addonXpIndicator = value; }
 };
 const char* StatNames[PRESTIGE_STAT_MAX] = {
     "Prestige Level", // STAT_PRESTIGELEVEL
@@ -358,6 +362,8 @@ bool ChatCommandRemovePrestigeLevel(ChatHandler* /*handler*/);
 
 void PrestigeLevelUp(Player* /*player*/);
 void InitPrestigeExpTnl(Player* /*player*/);
+void SendPrestigeXpAddonUpdate(Player* /*player*/);
+void SchedulePrestigeXpAddonUpdate(Player* /*player*/);
 uint32 GetPrestigeLevel(Player* /*player*/);
 
 void ClosePrestigeMenuInCombat(Player* /*player*/);
@@ -376,8 +382,10 @@ public:
         uint32 sender, uint32 action) override;
     void HandlePrestigeStatAllocation(Player* /*player*/, uint32 /*attribute*/, bool /*reset*/, uint32 /*amount*/ = 1);
     std::string GetPrestigeStatName(uint32 /*attribute*/);
+    virtual bool OnPlayerCanGiveLevel(Player* /*player*/, uint8 /*newLevel*/) override;
     virtual void OnPlayerLevelChanged(Player* /*player*/, uint8 /*oldLevel*/) override;
     virtual void OnPlayerEnterCombat(Player* /*player*/, Unit* /*enemy*/) override;
+    void OnPlayerGiveXP(Player* /*player*/, uint32& /*amount*/, Unit* /*victim*/, uint8 /*xpSource*/) override;
 };
 
 class PrestigeUnitScript : public UnitScript

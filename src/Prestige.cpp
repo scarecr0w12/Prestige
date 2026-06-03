@@ -2,6 +2,8 @@
 #include "Chat.h"
 #include "Config.h"
 #include "DBCEnums.h"
+#include "Duration.h"
+#include "SharedDefines.h"
 #include "Spell.h"
 #include "SpellMgr.h"
 #include "Player.h"
@@ -841,24 +843,40 @@ void PrestigeWorldScript::OnAfterConfigLoad(bool reload)
     prestigeConfigSettings.SetLevelUpFormulaBase(sConfigMgr->GetOption<uint32>("Prestige.LevelUpFormula.Base", 10000));
     prestigeConfigSettings.SetLevelUpFormulaR(sConfigMgr->GetOption<uint16>("Prestige.LevelUpFormula.r", 1));
     prestigeConfigSettings.SetLevelUpFormulaK(sConfigMgr->GetOption<uint16>("Prestige.LevelUpFormula.k", 1));
- 
+
+    prestigeConfigSettings.SetAddonXpIndicator(sConfigMgr->GetOption<bool>("Prestige.AddonXpIndicator", true));
+
     LoadPrestigeStats();
+}
+
+bool PrestigePlayerScript::OnPlayerCanGiveLevel(Player* player, uint8 newLevel)
+{
+    if (!player || !prestigeConfigSettings.IsPrestigeEnabled())
+    {
+        return true;
+    }
+
+    uint8 const intended = prestigeConfigSettings.GetIntendedMaxLevel();
+    if (newLevel != intended + 1 || player->GetLevel() != intended)
+    {
+        return true;
+    }
+
+    LOG_INFO("module", "Player ({}) has gained a prestige level at the intended max level of ({})", player->GetName(), intended);
+    PrestigeLevelUp(player);
+    return false;
 }
 
 void PrestigePlayerScript::OnPlayerLevelChanged(Player* player, uint8 oldLevel)
 {
-    if (!prestigeConfigSettings.IsPrestigeEnabled())
+    if (!player || !prestigeConfigSettings.IsPrestigeEnabled())
     {
         return;
     }
 
     uint8 const intended = prestigeConfigSettings.GetIntendedMaxLevel();
-    if (oldLevel == intended && player->GetLevel() == intended + 1)
-    {
-        LOG_INFO("module", "Player ({}) has gained a prestige level! Dropping their level back to the intended max level of ({})", player->GetName(), intended);
-        player->GiveLevel(oldLevel);
-        PrestigeLevelUp(player);
-    }
+    if (oldLevel < intended && player->GetLevel() == intended)
+        InitPrestigeExpTnl(player);
 }
 
 void PrestigeLevelUp(Player* player)
@@ -886,21 +904,94 @@ void InitPrestigeExpTnl(Player* player)
     }
 
     //only alter stats if at max level
-  if (player->GetLevel() == prestigeConfigSettings.GetIntendedMaxLevel()){
-  //   2 - Exponential increase with rate. Total exp needed to level = base * (1 + ((prestigelvl*r)/100) * (pow(prestigelvl,2)/k))
-        if(prestigeConfigSettings.GetLevelUpFormualType() == 2)
+    if (player->GetLevel() == prestigeConfigSettings.GetIntendedMaxLevel())
+    {
+        //   2 - Exponential increase with rate. Total exp needed to level = base * (1 + ((prestigelvl*r)/100) * (pow(prestigelvl,2)/k))
+        if (prestigeConfigSettings.GetLevelUpFormualType() == 2)
         {
-            double newExpTNL = prestigeConfigSettings.GetLevelUpFormulaBase() * (1+(((prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL]+1)*prestigeConfigSettings.GetLevelUpFormulaR()/100))) *(pow(prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL],2)/prestigeConfigSettings.GetLevelUpFormulaK());
-            player->SetUInt32Value(PLAYER_NEXT_LEVEL_XP, static_cast<uint32>(newExpTNL));
-            return;
-        }
-       //    1 - Linear increase with rate. Total exp needed to level = base*(100+(prestigelvl*r)/100)
-        if(prestigeConfigSettings.GetLevelUpFormualType() == 1)
-        {
-            double newExpTNL = prestigeConfigSettings.GetLevelUpFormulaBase() * ((100.0 + ((prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL]+1)*prestigeConfigSettings.GetLevelUpFormulaR())) / 100.0);
+            double newExpTNL = prestigeConfigSettings.GetLevelUpFormulaBase() * (1 + (((prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL] + 1) * prestigeConfigSettings.GetLevelUpFormulaR() / 100))) * (pow(prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL], 2) / prestigeConfigSettings.GetLevelUpFormulaK());
             player->SetUInt32Value(PLAYER_NEXT_LEVEL_XP, static_cast<uint32>(newExpTNL));
         }
-      }
+        //    1 - Linear increase with rate. Total exp needed to level = base*(100+(prestigelvl*r)/100)
+        else if (prestigeConfigSettings.GetLevelUpFormualType() == 1)
+        {
+            double newExpTNL = prestigeConfigSettings.GetLevelUpFormulaBase() * ((100.0 + ((prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL] + 1) * prestigeConfigSettings.GetLevelUpFormulaR())) / 100.0);
+            player->SetUInt32Value(PLAYER_NEXT_LEVEL_XP, static_cast<uint32>(newExpTNL));
+        }
+
+        SendPrestigeXpAddonUpdate(player);
+    }
+}
+
+void SendPrestigeXpAddonUpdate(Player* player)
+{
+    if (!player || !player->GetSession())
+    {
+        return;
+    }
+    if (!prestigeConfigSettings.IsPrestigeEnabled() || !prestigeConfigSettings.IsAddonXpIndicatorEnabled())
+    {
+        return;
+    }
+    if (player->GetLevel() != prestigeConfigSettings.GetIntendedMaxLevel())
+    {
+        return;
+    }
+
+    PrestigeStats* prestigeStats = GetPrestigeStats(player);
+    if (!prestigeStats)
+    {
+        return;
+    }
+
+    uint32 const cur = player->GetUInt32Value(PLAYER_XP);
+    uint32 const nxt = player->GetUInt32Value(PLAYER_NEXT_LEVEL_XP);
+    if (nxt == 0)
+    {
+        return;
+    }
+
+    static constexpr char kPrefix[] = "PrestigeXP";
+    std::string const body = Acore::StringFormat("{},{},{}", cur, nxt, prestigeStats->stats[PRESTIGE_STAT_PRESTIGELEVEL]);
+    std::string const fullMsg = Acore::StringFormat("{}\t{}", kPrefix, body);
+
+    WorldPacket data;
+    ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, LANG_ADDON, player, player, fullMsg);
+    player->GetSession()->SendPacket(&data);
+}
+
+void SchedulePrestigeXpAddonUpdate(Player* player)
+{
+    if (!player)
+    {
+        return;
+    }
+
+    player->m_Events.AddEventAtOffset([player]()
+    {
+        if (player && player->IsInWorld() && player->GetSession())
+        {
+            SendPrestigeXpAddonUpdate(player);
+        }
+    }, Milliseconds(1));
+}
+
+void PrestigePlayerScript::OnPlayerGiveXP(Player* player, uint32& /*amount*/, Unit* /*victim*/, uint8 /*xpSource*/)
+{
+    if (!player)
+    {
+        return;
+    }
+    if (!prestigeConfigSettings.IsPrestigeEnabled() || !prestigeConfigSettings.IsAddonXpIndicatorEnabled())
+    {
+        return;
+    }
+    if (player->GetLevel() != prestigeConfigSettings.GetIntendedMaxLevel())
+    {
+        return;
+    }
+
+    SchedulePrestigeXpAddonUpdate(player);
 }
 
 /*currently has no additional functionality. Included for future updates*/

@@ -5,6 +5,14 @@ This mod allows players to gain 'prestige levels' after hitting the servers leve
 ## How it works
 Once players hit your servers level cap, they will continue to get exp from quests and kills. After they've earned enough exp (formula in config), they'll gain a prestige level. Players can access their prestige menu with the chat command ".prestige menu". From here, they can select which stat to increase. Prestige stats can also be set to disabled for pvp.
 
+At the real level cap the stock UI often hides the XP bar even though the server tracks prestige XP.
+
+**Option A — AIO + ALE (recommended if you use Rochet2 AIO)**  
+Copy `lua/z_prestige_aio_xp.lua` into your ALE script directory next to `AIO_Server` (same layout as `env/dist/bin/lua_scripts/` on your host: `AIO_Server` plus this file). The `z_` prefix keeps load order **after** `AIO_Server/AIO.lua` so `AIO` is defined. Then set `Prestige.AddonXpIndicator = 0` in config so you do not get **two** updates (C++ whisper + AIO).
+
+**Option B — C++ addon whisper**  
+When `Prestige.AddonXpIndicator` is enabled, the module pushes addon whispers (prefix `PrestigeXP`, body `currentXP,nextXP,prestigeLevel`). Install the standalone client addon from `client/PrestigeXPIndicator` under `Interface\AddOns\` if you are not using AIO for this bar.
+
 ## Stats Available
 **Core Stats:** Stamina, Strength, Agility, Intellect, Spirit
 

@@ -17,6 +17,19 @@
 Prestige.Enable = 1
 
 #
+#    Prestige.AddonXpIndicator
+#        Description: Send addon whisper updates (prefix PrestigeXP) so a client addon can show
+#                     prestige XP toward the next prestige ding. Uses the same addon channel as
+#                     mod-ale's Player:SendAddonMessage (RegisterAddonMessagePrefix on the client).
+#                     If you use AIO + ALE with lua/z_prestige_aio_xp.lua, set this to 0 to avoid
+#                     duplicate pushes (that script uses AIO.Handle instead).
+#        Default:     1 - Enabled
+#                     0 - Disabled (no addon traffic)
+#
+
+Prestige.AddonXpIndicator = 1
+
+#
 #    Prestige.ResetCost
 #        Description: The cost of resetting attributes in copper.
 #        Default:     0 (disabled)
@@ -47,33 +60,33 @@ Prestige.DisablePvP = 1
 #       Keep in mind that Prestige.Max * Prestige.StatPerPoint CANNOT be greater than 65,536.
 #           ex: if Prestige.Max.Stamina = 100 and Prestige.StatPerPoint.Stamina = 700, you will have errors due to overflow
 #
-Prestige.Max.Stamina = 100
-Prestige.Max.Strength = 100
-Prestige.Max.Agility = 100
-Prestige.Max.Intellect = 100
-Prestige.Max.Spirit = 100
-Prestige.Max.SpellPower = 100
-Prestige.Max.DefenseRating = 100
-Prestige.Max.DodgeRating = 100
-Prestige.Max.ParryRating = 100
-Prestige.Max.BlockRating = 100
-Prestige.Max.BlockValue = 100
-Prestige.Max.CritRating = 100
-Prestige.Max.HitRating = 100
-Prestige.Max.ExpertiseRating = 100
-Prestige.Max.HasteRating = 100
-Prestige.Max.ArmorPenRating = 100
-Prestige.Max.ResilRating = 100
-Prestige.Max.AttackPower = 100
-Prestige.Max.BonusArmor = 100
-Prestige.Max.SpellPen = 100
-Prestige.Max.Mp5 = 100
-Prestige.Max.ResistFire = 100
-Prestige.Max.ResistFrost = 100
-Prestige.Max.ResistNature = 100
-Prestige.Max.ResistShadow = 100
-Prestige.Max.ResistArcane = 100
-Prestige.Max.ResistAll = 100
+Prestige.Max.Stamina = 50
+Prestige.Max.Strength = 50
+Prestige.Max.Agility = 50
+Prestige.Max.Intellect = 50
+Prestige.Max.Spirit = 50
+Prestige.Max.SpellPower = 40
+Prestige.Max.DefenseRating = 50
+Prestige.Max.DodgeRating = 50
+Prestige.Max.ParryRating = 50
+Prestige.Max.BlockRating = 50
+Prestige.Max.BlockValue = 50
+Prestige.Max.CritRating = 50
+Prestige.Max.HitRating = 50
+Prestige.Max.ExpertiseRating = 50
+Prestige.Max.HasteRating = 50
+Prestige.Max.ArmorPenRating = 30
+Prestige.Max.ResilRating = 50
+Prestige.Max.AttackPower = 40
+Prestige.Max.BonusArmor = 50
+Prestige.Max.SpellPen = 50
+Prestige.Max.Mp5 = 50
+Prestige.Max.ResistFire = 50
+Prestige.Max.ResistFrost = 50
+Prestige.Max.ResistNature = 50
+Prestige.Max.ResistShadow = 50
+Prestige.Max.ResistArcane = 50
+Prestige.Max.ResistAll = 30
 
 #
 #    Prestige.Max.*
@@ -83,33 +96,33 @@ Prestige.Max.ResistAll = 100
 #       Keep in mind that Prestige.Max * Prestige.StatPerPoint CANNOT be greater than 65,536.
 #           ex: if Prestige.Max.Stamina = 100 and Prestige.StatPerPoint.Stamina = 700, you will have errors due to overflow
 #
-Prestige.StatPerPoint.Stamina = 5
-Prestige.StatPerPoint.Strength = 5
-Prestige.StatPerPoint.Agility = 5
-Prestige.StatPerPoint.Intellect = 5
-Prestige.StatPerPoint.Spirit = 5
-Prestige.StatPerPoint.SpellPower = 10
-Prestige.StatPerPoint.DefenseRating = 12
-Prestige.StatPerPoint.DodgeRating = 12
-Prestige.StatPerPoint.ParryRating = 12
-Prestige.StatPerPoint.BlockRating = 12
-Prestige.StatPerPoint.BlockValue = 5
-Prestige.StatPerPoint.CritRating = 12
-Prestige.StatPerPoint.HitRating = 12
-Prestige.StatPerPoint.ExpertiseRating = 12
-Prestige.StatPerPoint.HasteRating = 12
-Prestige.StatPerPoint.ArmorPenRating = 12
-Prestige.StatPerPoint.ResilRating = 12
-Prestige.StatPerPoint.AttackPower = 10
-Prestige.StatPerPoint.BonusArmor = 100
-Prestige.StatPerPoint.SpellPen = 12
-Prestige.StatPerPoint.Mp5 = 10
-Prestige.StatPerPoint.ResistFire = 10
-Prestige.StatPerPoint.ResistFrost = 10
-Prestige.StatPerPoint.ResistNature = 10
-Prestige.StatPerPoint.ResistShadow = 10
-Prestige.StatPerPoint.ResistArcane = 10
-Prestige.StatPerPoint.ResistAll = 5
+Prestige.StatPerPoint.Stamina = 3
+Prestige.StatPerPoint.Strength = 3
+Prestige.StatPerPoint.Agility = 3
+Prestige.StatPerPoint.Intellect = 3
+Prestige.StatPerPoint.Spirit = 3
+Prestige.StatPerPoint.SpellPower = 5
+Prestige.StatPerPoint.DefenseRating = 5
+Prestige.StatPerPoint.DodgeRating = 5
+Prestige.StatPerPoint.ParryRating = 5
+Prestige.StatPerPoint.BlockRating = 5
+Prestige.StatPerPoint.BlockValue = 3
+Prestige.StatPerPoint.CritRating = 5
+Prestige.StatPerPoint.HitRating = 5
+Prestige.StatPerPoint.ExpertiseRating = 5
+Prestige.StatPerPoint.HasteRating = 5
+Prestige.StatPerPoint.ArmorPenRating = 4
+Prestige.StatPerPoint.ResilRating = 5
+Prestige.StatPerPoint.AttackPower = 5
+Prestige.StatPerPoint.BonusArmor = 15
+Prestige.StatPerPoint.SpellPen = 5
+Prestige.StatPerPoint.Mp5 = 5
+Prestige.StatPerPoint.ResistFire = 5
+Prestige.StatPerPoint.ResistFrost = 5
+Prestige.StatPerPoint.ResistNature = 5
+Prestige.StatPerPoint.ResistShadow = 5
+Prestige.StatPerPoint.ResistArcane = 5
+Prestige.StatPerPoint.ResistAll = 3
 
 ########################################
 # Prestige Level Exp Formula

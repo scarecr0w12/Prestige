@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: Prestige XP Indicator
+## Notes: Shows prestige XP progress from the Prestige server module (addon whisper).
+## Version: 1
+## Author: Old Man Warcraft
+
+PrestigeXPIndicator.lua
